@@ -44,6 +44,7 @@ for t in titles:
     array.append(d)
     ##
 df = pd.DataFrame(array)
+df = df.drop_duplicates(subset=['name', 'address', 'date'], keep='last')
 #print(df)
 df.to_csv("{}.csv".format(CITY.lower()), index=False)
 
