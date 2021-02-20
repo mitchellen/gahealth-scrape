@@ -12,7 +12,7 @@ URL = 'https://ga.healthinspections.us/stateofgeorgia/#home'
 CITY = sys.argv[1]
 array = []
 opts = Options()
-opts.add_argument('--headless')
+#opts.add_argument('--headless')
 browser = Chrome(options=opts)
 browser.get(URL)
 time.sleep(4)
@@ -45,8 +45,8 @@ for t in titles:
     ##
 df = pd.DataFrame(array)
 df = df.drop_duplicates(keep='last')
-#print(df)
-df.to_csv("{}.csv".format(CITY.lower()), indbex=False)
+print(df)
+#df.to_csv("{}.csv".format(CITY.lower()), indbex=False)
 
 
 browser.quit()
