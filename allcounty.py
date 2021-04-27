@@ -2,7 +2,7 @@
 Run Script and pass a city in like './gahealth.py albany'
 '''
 import time
-import sys
+#import sys
 import pandas as pd
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import Select
 URL = 'https://ga.healthinspections.us/stateofgeorgia/#home'
 array = []
 opts = Options()
-opts.add_argument('--headless')
+#opts.add_argument('--headless')
 browser = Chrome(options=opts)
 browser.get(URL)
 time.sleep(4)
@@ -21,9 +21,12 @@ select = Select(browser.find_element_by_id('county'))
 counties = select.options
 #remove the junk entry
 counties.pop(0)
+counties = [c.text for c in counties]
+#browser.quit()
 for c in counties:
-    COUNTY = c.text
+    COUNTY = c
     # start scraping each county
+    browser.refresh()
     browser.get(URL)
     time.sleep(4)
     ##Button Mashing##
@@ -37,7 +40,6 @@ for c in counties:
     for _ in range(100):
         browser.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", maybe)
         time.sleep(.5)
-
     time.sleep(2)
     titles = browser.find_elements_by_class_name("facility")
     for t in titles:
@@ -50,9 +52,16 @@ for c in counties:
         score = l[4].text.split(':')[1]
         when = l[5].text.split(':')[1]
         d = {'name': name, 'address': address, "phone": phone,\
-             "permit_type": permit, "score": score, "date":when}
-    array.append(d)
-    print(c.text)
+             "permit_type": permit, "score": int(score), "date":when, "county": COUNTY}
+        array.append(d)
+    print(COUNTY)
+    #browser.execute_script("window.history.go(-1)")
+    time.sleep(2)
+browser.quit()
+df = pd.DataFrame(array)
 
 #select.select_by_visible_text(CITY.upper())
 #browser.find_element_by_id('searchButton').click()
+# bacon = df.loc[df['county'] == 'BACON']
+#df[(df['county'] == 'BACON') & (df['score'] < 80)]
+#bacon['score'].mean()

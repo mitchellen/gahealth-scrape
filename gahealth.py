@@ -7,6 +7,21 @@ import pandas as pd
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import Select
+import psycopg2
+# db setup
+# Set up Postgres database connection and cursor.
+t_host = "localhost" # either "localhost", a domain name, or an IP address.
+t_port = "5432" # default postgres port
+t_dbname = "cityscrape"
+t_user = "scrape"
+t_pw = "password"
+db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=t_user, password=t_pw)
+db_conn.autocommit = True
+db_cursor = db_conn.cursor()
+if db_conn is not None:
+    print('Connection established to PostgreSQL.')
+else:
+    print('Connection not established to PostgreSQL.')
 # #URL
 URL = 'https://ga.healthinspections.us/stateofgeorgia/#home'
 CITY = sys.argv[1]
@@ -39,13 +54,22 @@ for t in titles:
     permit = l[3].text.split(':')[1]
     score = l[4].text.split(':')[1]
     when = l[5].text.split(':')[1]
-    d = {'name': name, 'address': address, "phone": phone,\
-         "permit_type": permit, "score": score, "date":when}
-    array.append(d)
+    postgres_insert_query = "INSERT INTO rest_scores (name,address,phone,permit,score,date) VALUES (%s,%s,%s,%s,%s,%s);"
+    record_to_insert = (name,address,phone,permit,score,when,) # note the trailing comma
+    # Trap errors for opening the file
+    try:
+        db_cursor.execute(postgres_insert_query, record_to_insert)
+    except psycopg2.Error as e:
+        print(e)
+    # Success!
+    sqlCreateTable = "create table rest_scores (name varchar(128),address text, phone varchar(128),permit varchar(128), score NUMERIC,date date NOT NULL);"
+    #d = {'name': name, 'address': address, "phone": phone,\
+         #"permit_type": permit, "score": score, "date":when}
+    #array.append(d)
     ##
-df = pd.DataFrame(array)
-df = df.drop_duplicates(keep='last')
-print(df)
+#df = pd.DataFrame(array)
+#df = df.drop_duplicates(keep='last')
+#print(df)
 #df.to_csv("{}.csv".format(CITY.lower()), indbex=False)
 
 
